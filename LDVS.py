@@ -57,7 +57,7 @@ def LDVS_feature_map_creation(input_grayfile, output_ldvs_name, window = 3, LB =
     - window: Size of window to be used for calculation of LDVS value for a pixel
     - LB: Lower bound of histogram of edge intensity map for thresholding
     - UB: Upper bound of histogram of edge intensity map for thresholding
-    - step_size: Threshold increment for LDVS calculation
+    - step_size: Percentile increment in threshold for LDVS calculation
     - write: Boolean indicating whether to write LDVS feature map to file
     
     Outputs:
