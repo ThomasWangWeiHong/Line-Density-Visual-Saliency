@@ -84,7 +84,7 @@ def LDVS_feature_map_creation(input_grayfile, output_ldvs_name, window = 3, LB =
                 array = thresholded_image[(alpha - buffer) : (alpha + buffer + 1), (beta - buffer) : (beta + buffer + 1)]
                 LDVS_image[alpha, beta] += np.amin(array)
                 
-    LDVS_rescaled = exposure.rescale_intensity(LDVS_image, out_range = 'uint16')
+    LDVS_rescaled = exposure.rescale_intensity(LDVS_image, out_range = (0, 1))
                     
     if write:
         input_dataset = gdal.Open(input_grayfile)
