@@ -61,8 +61,7 @@ def LDVS_feature_map_creation(input_grayfile, output_ldvs_name, window = 3, LB =
     - write: Boolean indicating whether to write LDVS feature map to file
     
     Outputs:
-    - LDVS_rescaled: LDVS feature map rescaled to unsigned 16 - bit integer in order to keep the LDVS feature map values
-                     within a reasonable range
+    - LDVS_rescaled: LDVS feature map normalized to range [0, 1] as implemented in the paper
     
     """
     
