@@ -1,5 +1,5 @@
 import numpy as np
-from osgeo import gdal
+import rasterio
 from scipy import ndimage
 from skimage import exposure
 from tqdm import tqdm
@@ -23,23 +23,15 @@ def grayscale_raster_creation(input_MSfile, output_filename):
     
     """
     
-    image = np.transpose(gdal.Open(input_MSfile).ReadAsArray(), [1, 2, 0])
-    gray = np.zeros((int(image.shape[0]), int(image.shape[1])))
+    with rasterio.open(input_MSfile) as f:
+        metadata = f.profile
+        img = np.transpose(f.read(tuple(np.arange(metadata['count']) + 1)), [1, 2, 0])[:, :, 0 : 3]
+        
+    gray = np.max(img, axis = 2)
     
-    for i in range(image.shape[0]):
-        for j in range(image.shape[1]):
-            gray[i, j] = max(image[i, j, 0], image[i, j, 1], image[i, j, 2])
-    
-    input_dataset = gdal.Open(input_MSfile)
-    input_band = input_dataset.GetRasterBand(1)
-    gtiff_driver = gdal.GetDriverByName('GTiff')
-    output_dataset = gtiff_driver.Create(output_filename, input_band.XSize, input_band.YSize, 1, gdal.GDT_Float32)
-    output_dataset.SetProjection(input_dataset.GetProjection())
-    output_dataset.SetGeoTransform(input_dataset.GetGeoTransform())
-    output_dataset.GetRasterBand(1).WriteArray(gray)
-    
-    output_dataset.FlushCache()
-    del output_dataset
+    metadata['count'] = 1
+    with rasterio.open(output_filename, 'w', **metadata) as dst:
+        dst.write(gray[np.newaxis, :, :])
     
     return gray
 
@@ -70,7 +62,11 @@ def LDVS_feature_map_creation(input_grayfile, output_ldvs_name, window = 3, LB =
     else :    
         buffer = int((window - 1) / 2) 
     
-    pan_image = gdal.Open(input_grayfile).ReadAsArray()
+    with rasterio.open(input_grayfile) as f:
+        metadata = f.profile
+        pan_image = f.read(1)
+        
+    
     intensity_image = np.hypot(ndimage.sobel(pan_image, 0), ndimage.sobel(pan_image, 1))
     
     LDVS_image = np.zeros((intensity_image.shape[0], intensity_image.shape[1]))
@@ -83,18 +79,11 @@ def LDVS_feature_map_creation(input_grayfile, output_ldvs_name, window = 3, LB =
                 array = thresholded_image[(alpha - buffer) : (alpha + buffer + 1), (beta - buffer) : (beta + buffer + 1)]
                 LDVS_image[alpha, beta] += np.amin(array)
                 
-    LDVS_rescaled = exposure.rescale_intensity(LDVS_image, out_range = (0, 1))
+    LDVS_rescaled = exposure.rescale_intensity(LDVS_image, out_range = (0, 1)).astype(np.float32)
                     
     if write:
-        input_dataset = gdal.Open(input_grayfile)
-        input_band = input_dataset.GetRasterBand(1)
-        gtiff_driver = gdal.GetDriverByName('GTiff')
-        output_dataset = gtiff_driver.Create(output_ldvs_name, input_band.XSize, input_band.YSize, 1, gdal.GDT_UInt16)
-        output_dataset.SetProjection(input_dataset.GetProjection())
-        output_dataset.SetGeoTransform(input_dataset.GetGeoTransform())
-        output_dataset.GetRasterBand(1).WriteArray(LDVS_rescaled)
-    
-        output_dataset.FlushCache()
-        del output_dataset
+        metadata['dtype'] = 'float32'
+        with rasterio.open(output_ldvs_name, 'w', **metadata) as dst:
+            dst.write(LDVS_rescaled[np.newaxis, :, :])
     
     return LDVS_rescaled
