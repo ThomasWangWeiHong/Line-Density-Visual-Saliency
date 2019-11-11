@@ -7,7 +7,15 @@ Saliency and PanTex' by Wu T., Luo J., Zhou X., Ma J., Song X. (2018).
 
 Requirements:
 - numpy
-- gdal
+- rasterio
 - scipy
 - skimage
 - tqdm
+
+Test Image (courtesy of USGS NAIP):
+
+![alt text](https://github.com/ThomasWangWeiHong/Line-Density-Visual-Saliency/blob/master/Test_Image.JPG)
+
+LDVS Image:
+
+![alt text](https://github.com/ThomasWangWeiHong/Line-Density-Visual-Saliency/blob/master/LDVS_Image.JPG)
